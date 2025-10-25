@@ -1,0 +1,36 @@
+# Configuration chkrootkit - purple.srv.fnev.eu
+# ================================================
+
+# MODE DE DÉTECTION
+# -----------------
+# strict   : Notifie UNIQUEMENT sur INFECTED (recommandé)
+# paranoid : Notifie aussi sur WARNING après filtrage (beaucoup de faux positifs)
+MODE=strict
+
+# PATTERNS À IGNORER (utilisés uniquement en mode paranoid)
+# ----------------------------------------------------------
+# Un pattern par ligne
+# Les lignes commençant par # sont ignorées
+
+# Interfaces réseau système
+IGNORE:eth0: PACKET SNIFFER
+IGNORE:enp.*: PACKET SNIFFER
+IGNORE:ens.*: PACKET SNIFFER
+IGNORE:lo: not promisc and no packet sniffer sockets
+
+# systemd-networkd (gestionnaire réseau Debian)
+IGNORE:systemd-networkd.*PACKET SNIFFER
+
+# Docker
+IGNORE:docker.*: PACKET SNIFFER
+IGNORE:docker.*: not promisc and no packet sniffer sockets
+IGNORE:br-.*: PACKET SNIFFER
+IGNORE:br-.*: not promisc and no packet sniffer sockets
+
+# Fichiers Ruby (paquets Debian officiels)
+IGNORE:/usr/lib/ruby/vendor_ruby.*\.document
+IGNORE:\[From Debian package:
+
+# Fichiers de test Fail2ban (paquets Debian officiels)
+IGNORE:/usr/lib/python3/dist-packages/fail2ban/tests.*\.htpasswd
+IGNORE:/usr/lib/python3/dist-packages/fail2ban/tests.*\.htaccess

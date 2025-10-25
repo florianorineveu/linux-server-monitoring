@@ -1,0 +1,20 @@
+# Logs
+logs/
+*.log
+
+# Real configuration
+config/*.conf
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# OS
+.DS_Store
+Thumbs.db

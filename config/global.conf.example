@@ -1,0 +1,11 @@
+# Configuration globale du monitoring
+# Copier vers global.conf et ajuster les valeurs
+
+# Email pour les notifications
+EMAIL="admin@example.com"
+
+# Hostname du serveur
+HOSTNAME="server.example.com"
+
+# Chemin d'installation
+INSTALL_PATH="/opt/monitoring"
