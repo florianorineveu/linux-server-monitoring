@@ -1,0 +1,262 @@
+# ============================================================================
+# chkrootkit Monitoring Configuration
+# ============================================================================
+#
+# Configuration for chkrootkit-scan.sh script
+# This file controls how chkrootkit scans are performed and reported
+#
+# Installation:
+# 1. Copy this file: cp chkrootkit.conf.example chkrootkit.conf
+# 2. Edit with your settings: nano chkrootkit.conf
+# 3. Adjust ignore patterns based on your false positives
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Detection Mode
+# ----------------------------------------------------------------------------
+
+# MODE controls the alerting sensitivity
+#
+# Options:
+#   strict   - Only alerts on actual infections (INFECTED status)
+#              Ignores all WARNING status (99% are false positives)
+#              RECOMMENDED for production servers
+#              Zero maintenance required
+#
+#   paranoid - Alerts on both INFECTED and WARNING status
+#              Requires extensive tuning of IGNORE patterns
+#              High false positive rate on modern systems
+#              Use only for security audits or investigations
+#
+# Recommendation: Use 'strict' mode (default)
+MODE=strict
+
+# ----------------------------------------------------------------------------
+# Notification Settings
+# ----------------------------------------------------------------------------
+
+# Email address to receive alerts
+# In strict mode, only receives emails for real infections
+EMAIL=admin@example.com
+
+# Server hostname for email identification
+# Use your actual server hostname or FQDN
+HOSTNAME=server.example.com
+
+# ----------------------------------------------------------------------------
+# False Positive Filters (used in PARANOID mode only)
+# ----------------------------------------------------------------------------
+#
+# In STRICT mode, these are not used (all WARNINGs ignored)
+# In PARANOID mode, these patterns filter out known false positives
+#
+# Format: IGNORE:pattern_to_match
+# Patterns are matched against warning text using grep
+#
+# Add patterns here only if you're using PARANOID mode
+# and experiencing false positive WARNINGs
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Network Interface Warnings
+# ----------------------------------------------------------------------------
+# Modern Linux network managers show as "PACKET SNIFFER"
+# These are false positives - they're legitimate system services
+
+# Physical network interfaces
+IGNORE:eth0: PACKET SNIFFER
+IGNORE:enp.*: PACKET SNIFFER
+IGNORE:ens.*: PACKET SNIFFER
+
+# Loopback interface (always safe)
+IGNORE:lo: not promisc and no packet sniffer sockets
+
+# Wireless interfaces
+# IGNORE:wlan.*: PACKET SNIFFER
+# IGNORE:wlp.*: PACKET SNIFFER
+
+# ----------------------------------------------------------------------------
+# Network Management Services
+# ----------------------------------------------------------------------------
+# These are legitimate system services for network management
+
+# systemd-networkd (default Debian/Ubuntu network manager)
+IGNORE:systemd-networkd.*PACKET SNIFFER
+
+# NetworkManager (alternative network manager)
+# IGNORE:NetworkManager.*PACKET SNIFFER
+
+# DHCP clients
+# IGNORE:dhclient.*PACKET SNIFFER
+# IGNORE:dhcpcd.*PACKET SNIFFER
+# IGNORE:dhcpd.*PACKET SNIFFER
+
+# WPA Supplicant (WiFi authentication)
+# IGNORE:wpa_supplicant.*PACKET SNIFFER
+
+# ----------------------------------------------------------------------------
+# Docker and Container Networking
+# ----------------------------------------------------------------------------
+# Docker creates virtual network interfaces that trigger false warnings
+
+# Docker bridge networks
+IGNORE:docker.*: PACKET SNIFFER
+IGNORE:docker.*: not promisc and no packet sniffer sockets
+
+# Docker custom bridge networks (br-XXXXX)
+IGNORE:br-.*: PACKET SNIFFER
+IGNORE:br-.*: not promisc and no packet sniffer sockets
+
+# ----------------------------------------------------------------------------
+# Hidden Files - Ruby Packages (Debian/Ubuntu)
+# ----------------------------------------------------------------------------
+# Ruby packages include .document files for documentation
+# These are from official Debian/Ubuntu packages, not malware
+
+IGNORE:/usr/lib/ruby/vendor_ruby.*\.document
+
+# Generic pattern for any Debian package files
+IGNORE:\[From Debian package:
+
+# ----------------------------------------------------------------------------
+# Hidden Files - Python Packages
+# ----------------------------------------------------------------------------
+# Python packages may include hidden files for various purposes
+
+# Fail2ban test files (from official Debian package)
+IGNORE:/usr/lib/python3/dist-packages/fail2ban/tests.*\.htpasswd
+IGNORE:/usr/lib/python3/dist-packages/fail2ban/tests.*\.htaccess
+
+# aiohttp hash files (from official Debian package)
+IGNORE:/usr/lib/python3/dist-packages/aiohttp.*\.hash
+
+# Add other Python package hidden files as needed
+# IGNORE:/usr/lib/python3/dist-packages/.*\.hidden_file
+
+# ----------------------------------------------------------------------------
+# Hidden Files - System Directories
+# ----------------------------------------------------------------------------
+
+# Git repositories in system directories (if you use configuration management)
+# IGNORE:/etc/.git
+# IGNORE:/opt/.git
+
+# Temporary files
+# IGNORE:/tmp/.X.*
+# IGNORE:/tmp/.ICE-unix
+
+# ----------------------------------------------------------------------------
+# Application Specific (uncomment as needed)
+# ----------------------------------------------------------------------------
+
+# PostgreSQL
+# IGNORE:/var/lib/postgresql/.psql_history
+
+# MySQL/MariaDB
+# IGNORE:/var/lib/mysql/.mysql_history
+
+# Vim swap files
+# IGNORE:.*\.swp
+
+# ----------------------------------------------------------------------------
+# Advanced Configuration
+# ----------------------------------------------------------------------------
+
+# Installation path (usually don't need to change)
+INSTALL_PATH=/opt/monitoring
+
+# Log file location (relative to INSTALL_PATH)
+LOG_FILE=logs/chkrootkit-scan.log
+
+# Temporary file for scan results
+TEMP_FILE=/tmp/chkrootkit-scan-temp.log
+
+# ----------------------------------------------------------------------------
+# Understanding chkrootkit Warnings
+# ----------------------------------------------------------------------------
+#
+# chkrootkit is known for high false positive rates on modern systems
+# This is why STRICT mode (default) is strongly recommended
+#
+# Common false positives:
+# 1. PACKET SNIFFER warnings for legitimate network services
+# 2. Hidden files from official distribution packages
+# 3. Legitimate system administration tools
+# 4. Modern systemd services
+#
+# Real infections will show as "INFECTED" status, not just "WARNING"
+# In 10+ years of using chkrootkit, I've never seen a false "INFECTED"
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Troubleshooting
+# ----------------------------------------------------------------------------
+#
+# Receiving too many alerts in PARANOID mode:
+# 1. Review the email alert for specific warnings
+# 2. Verify the file/process is legitimate
+# 3. Add IGNORE pattern above
+# 4. Test: sudo /opt/monitoring/scripts/chkrootkit-scan.sh
+# 5. Check: sudo tail /opt/monitoring/logs/chkrootkit-scan.log
+#
+# Not receiving any alerts:
+# 1. Verify email configuration (Postfix must be working)
+# 2. Test email: echo "test" | mail -s "test" your@email.com
+# 3. Check cron is running: sudo journalctl | grep CRON | grep chkrootkit
+# 4. Run manually: sudo /opt/monitoring/scripts/chkrootkit-scan.sh
+#
+# Switching between modes:
+# - To test all warnings: Change MODE=paranoid
+# - To see only real threats: Change MODE=strict (recommended)
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# System-wide chkrootkit Configuration
+# ----------------------------------------------------------------------------
+#
+# Disable the default Debian cron job (conflicts with our script):
+#   sudo chmod -x /etc/cron.daily/chkrootkit
+#
+# This prevents duplicate emails and uses our smarter filtering
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Maintenance Notes
+# ----------------------------------------------------------------------------
+#
+# chkrootkit doesn't require regular updates like rkhunter
+# It's a simple shell script that checks for known patterns
+#
+# To run a manual scan:
+#   sudo chkrootkit
+#
+# To see only warnings:
+#   sudo chkrootkit | grep WARNING
+#
+# View recent scan logs:
+#   sudo tail -100 /opt/monitoring/logs/chkrootkit-scan.log
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Security Best Practices
+# ----------------------------------------------------------------------------
+#
+# chkrootkit is a secondary defense layer, not the primary one
+#
+# Primary security measures should include:
+# 1. Strong SSH keys (no password authentication)
+# 2. Fail2ban for brute force protection
+# 3. UFW firewall properly configured
+# 4. Regular system updates (unattended-upgrades)
+# 5. Minimal exposed services
+# 6. Regular backups
+#
+# chkrootkit + rkhunter + Lynis together provide defense in depth
+#
+# ============================================================================

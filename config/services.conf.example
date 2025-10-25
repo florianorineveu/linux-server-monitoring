@@ -1,0 +1,146 @@
+# ============================================================================
+# Services Monitoring Configuration
+# ============================================================================
+#
+# This file defines which system services and Docker containers to monitor.
+# The check-services.sh and check-docker-containers.sh scripts read this file.
+#
+# Format:
+# - One service name per line
+# - Lines starting with # are comments (ignored)
+# - Empty lines are ignored
+#
+# Service names must match:
+# - systemctl service names for system services
+# - docker ps container names for Docker containers
+#
+# To find service names:
+#   systemctl list-units --type=service
+#   docker ps --format "{{.Names}}"
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Critical System Services
+# ----------------------------------------------------------------------------
+# These services are essential for server operation
+# Monitoring will alert immediately if any of these are down
+
+# SSH daemon - Required for remote access
+# NEVER disable this or you'll be locked out!
+ssh
+
+# Fail2ban - Brute force protection
+# Protects against SSH attacks and other intrusions
+fail2ban
+
+# UFW (Uncomplicated Firewall) - Network security
+# Manages iptables rules for inbound/outbound traffic
+ufw
+
+# Postfix - Mail transfer agent
+# Required for sending monitoring alert emails
+postfix
+
+# Docker - Container runtime
+# Required if running containerized applications
+docker
+
+# ----------------------------------------------------------------------------
+# Web Services (uncomment if using)
+# ----------------------------------------------------------------------------
+
+# Nginx - Web server and reverse proxy
+# nginx
+
+# Apache - Alternative web server
+# apache2
+
+# ----------------------------------------------------------------------------
+# Database Services (uncomment if using)
+# ----------------------------------------------------------------------------
+
+# MySQL/MariaDB - Relational database
+# mysql
+# mariadb
+
+# PostgreSQL - Advanced relational database
+# postgresql
+
+# Redis - In-memory data store
+# redis
+# redis-server
+
+# MongoDB - NoSQL database
+# mongod
+
+# ----------------------------------------------------------------------------
+# PHP Services (uncomment if using)
+# ----------------------------------------------------------------------------
+
+# PHP-FPM (adjust version as needed)
+# php8.3-fpm
+# php8.2-fpm
+# php8.1-fpm
+
+# ----------------------------------------------------------------------------
+# Application Servers (uncomment if using)
+# ----------------------------------------------------------------------------
+
+# Node.js applications (if managed by systemd)
+# node-app
+
+# Python applications (if managed by systemd)
+# gunicorn
+# celery
+
+# ----------------------------------------------------------------------------
+# Docker Containers (for check-docker-containers.sh)
+# ----------------------------------------------------------------------------
+# List critical container names below
+# These should match exactly as shown in: docker ps --format "{{.Names}}"
+
+# Nextcloud All-in-One containers
+# nextcloud-aio-apache
+# nextcloud-aio-database
+# nextcloud-aio-redis
+# nextcloud-aio-imaginary
+# nextcloud-aio-fulltextsearch
+
+# Minecraft server
+# minecraft-bedrock
+
+# Custom application containers
+# myapp-web
+# myapp-db
+# myapp-cache
+
+# ----------------------------------------------------------------------------
+# Monitoring Services (uncomment if using)
+# ----------------------------------------------------------------------------
+
+# Prometheus - Metrics collection
+# prometheus
+
+# Grafana - Metrics visualization
+# grafana-server
+
+# Elasticsearch - Search and analytics
+# elasticsearch
+
+# ----------------------------------------------------------------------------
+# Notes
+# ----------------------------------------------------------------------------
+#
+# 1. After editing this file, test the monitoring script:
+#    sudo /opt/monitoring/scripts/check-services.sh
+#
+# 2. Check logs to verify services are being monitored:
+#    sudo tail -f /opt/monitoring/logs/services-check.log
+#
+# 3. For Docker containers, ensure they're defined in CRITICAL_CONTAINERS
+#    array in check-docker-containers.sh or use this file
+#
+# 4. Remove or comment out services you don't use to avoid false alerts
+#
+# ============================================================================

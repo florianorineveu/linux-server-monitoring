@@ -1,0 +1,105 @@
+# ============================================================================
+# Linux Server Monitoring Suite - Crontab Configuration
+# ============================================================================
+#
+# Installation instructions:
+# 1. Copy this file content: cat examples/crontab.example
+# 2. Edit root crontab: sudo crontab -e
+# 3. Paste and adjust paths if needed
+# 4. Save and exit
+#
+# Note: All scripts run as root for full system access
+# Logs are stored in /opt/monitoring/logs/
+#
+# Cron format: MIN HOUR DAY MONTH WEEKDAY COMMAND
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Security Scans
+# ----------------------------------------------------------------------------
+
+# Update rkhunter database (daily at 1 AM)
+# Silent update, no notification
+0 1 * * * /usr/bin/rkhunter --update --quiet 2>&1
+
+# Run rkhunter scan (daily at 2 AM)
+# STRICT mode: Only alerts on real anomalies after filtering
+0 2 * * * /opt/monitoring/scripts/rkhunter-scan.sh
+
+# Run chkrootkit scan (daily at 3 AM)
+# STRICT mode: Only alerts on actual infections (INFECTED status)
+0 3 * * * /opt/monitoring/scripts/chkrootkit-scan.sh
+
+# Run Lynis security audit (weekly on Sunday at 4 AM)
+# Reports if security score drops by more than 5 points
+0 4 * * 0 /opt/monitoring/scripts/lynis-audit.sh
+
+# ----------------------------------------------------------------------------
+# System Monitoring
+# ----------------------------------------------------------------------------
+
+# Check system services (every hour)
+# Alerts immediately if critical services are down
+0 * * * * /opt/monitoring/scripts/check-services.sh
+
+# Check disk space (every 6 hours)
+# Alerts at 80% (warning) and 90% (critical) usage
+0 */6 * * * /opt/monitoring/scripts/check-disk-space.sh
+
+# Check mail queue (every 6 hours)
+# Alerts if more than 20 messages are queued
+0 */6 * * * /opt/monitoring/scripts/check-mail-queue.sh
+
+# ----------------------------------------------------------------------------
+# Docker Monitoring (if using Docker)
+# ----------------------------------------------------------------------------
+
+# Check Docker containers (every 15 minutes)
+# Monitors critical containers: Nextcloud, databases, applications
+# Comment out if not using Docker
+*/15 * * * * /opt/monitoring/scripts/check-docker-containers.sh
+
+# ----------------------------------------------------------------------------
+# Backup Verification (optional)
+# ----------------------------------------------------------------------------
+
+# Check Minecraft backup freshness (daily at 8 AM)
+# Alerts if no backup in last 25 hours
+# Comment out if not running Minecraft server
+0 8 * * * /opt/monitoring/scripts/check-minecraft-backup.sh
+
+# ----------------------------------------------------------------------------
+# System Maintenance (optional)
+# ----------------------------------------------------------------------------
+
+# Clean up old logs (weekly on Monday at 5 AM)
+# Removes monitoring logs older than 30 days
+# Uncomment if you want automatic log cleanup
+# 0 5 * * 1 find /opt/monitoring/logs -name "*.log" -mtime +30 -delete
+
+# Clean up system logs (weekly on Monday at 6 AM)
+# Removes journal logs older than 7 days
+# Uncomment if you want automatic journal cleanup
+# 0 6 * * 1 journalctl --vacuum-time=7d
+
+# ============================================================================
+# Customization Tips
+# ============================================================================
+#
+# Adjust timing to suit your needs:
+# - More frequent checks for critical systems
+# - Less frequent for development/staging
+#
+# Examples:
+# */5 * * * *     Every 5 minutes
+# 0 */2 * * *     Every 2 hours
+# 0 0 * * 1       Every Monday at midnight
+# 0 0 1 * *       First day of every month
+#
+# Test scripts manually before adding to cron:
+# sudo /opt/monitoring/scripts/check-services.sh
+#
+# View cron logs:
+# sudo journalctl | grep CRON | tail -20
+#
+# ============================================================================

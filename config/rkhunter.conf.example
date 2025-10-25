@@ -1,0 +1,206 @@
+# ============================================================================
+# rkhunter Monitoring Configuration
+# ============================================================================
+#
+# Configuration for rkhunter-scan.sh script
+# This file controls how rkhunter scans are performed and reported
+#
+# Installation:
+# 1. Copy this file: cp rkhunter.conf.example rkhunter.conf
+# 2. Edit with your settings: nano rkhunter.conf
+# 3. Adjust ignore patterns based on your false positives
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Detection Mode
+# ----------------------------------------------------------------------------
+
+# MODE controls how aggressive the detection is
+# 
+# Options:
+#   strict   - Filters common false positives (RECOMMENDED)
+#              Only alerts on real anomalies after intelligent filtering
+#              Best for production servers with minimal maintenance
+#
+#   paranoid - Reports all warnings without filtering
+#              Requires manual tuning of IGNORE patterns
+#              Best for security audits or incident investigation
+#
+# Recommendation: Start with 'strict' mode
+MODE=strict
+
+# ----------------------------------------------------------------------------
+# Notification Settings
+# ----------------------------------------------------------------------------
+
+# Email address to receive alerts
+# Only receives emails when real issues are detected (in strict mode)
+EMAIL=admin@example.com
+
+# Server hostname for email subject and identification
+# Use your actual server hostname or FQDN
+HOSTNAME=server.example.com
+
+# ----------------------------------------------------------------------------
+# False Positive Filters (used in STRICT mode)
+# ----------------------------------------------------------------------------
+# 
+# Patterns listed here will be ignored during scanning
+# Format: IGNORE:pattern_to_ignore
+#
+# These patterns are checked against each warning line
+# Only add patterns for confirmed false positives
+#
+# Common sources of false positives:
+# - System configuration differences between distributions
+# - Legitimate hidden files in /etc/ and /dev/
+# - Package manager differences
+# - Virtualization platform specific files
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# SSH Configuration Warnings
+# ----------------------------------------------------------------------------
+# rkhunter often reports SSH protocol version mismatches
+# These are harmless configuration inconsistencies
+
+IGNORE:SSH and rkhunter configuration options should be the same
+IGNORE:SSH configuration option 'Protocol'
+IGNORE:Rkhunter configuration option 'ALLOW_SSH_PROT_V1'
+
+# ----------------------------------------------------------------------------
+# System Hidden Files (Debian/Ubuntu)
+# ----------------------------------------------------------------------------
+# These are legitimate hidden files created by Debian/Ubuntu systems
+# They are not indicators of compromise
+
+# systemd-resolved backup file
+IGNORE:/etc/.resolv.conf.systemd-resolved.bak
+
+# Package update timestamp file
+IGNORE:/etc/.updated
+
+# System Java version files (if Java installed)
+# IGNORE:/etc/.java
+
+# ----------------------------------------------------------------------------
+# Device Files
+# ----------------------------------------------------------------------------
+# udev creates hidden files in /dev/ for device management
+# These are normal on modern Linux systems
+
+IGNORE:/dev/.udev
+IGNORE:/dev/.initramfs
+
+# LVM (Logical Volume Manager) hidden files
+# IGNORE:/dev/.lvm
+
+# ----------------------------------------------------------------------------
+# Distribution Specific Files (uncomment as needed)
+# ----------------------------------------------------------------------------
+
+# Ubuntu specific
+# IGNORE:/etc/.git
+# IGNORE:/usr/share/man/.git
+
+# Debian specific  
+# IGNORE:/var/lib/dpkg/.git
+
+# Red Hat/CentOS specific
+# IGNORE:/etc/.pwd.lock
+
+# ----------------------------------------------------------------------------
+# Custom Applications (examples - adjust for your setup)
+# ----------------------------------------------------------------------------
+
+# If you get warnings about specific application files, add them here
+# Example format:
+# IGNORE:/path/to/application/hidden/file
+
+# Docker related hidden files
+# IGNORE:/var/lib/docker/.dockerignore
+
+# Custom application configs
+# IGNORE:/opt/myapp/.config
+
+# ----------------------------------------------------------------------------
+# Advanced Configuration
+# ----------------------------------------------------------------------------
+
+# Installation path (usually don't need to change)
+INSTALL_PATH=/opt/monitoring
+
+# Log file location (relative to INSTALL_PATH)
+LOG_FILE=logs/rkhunter-scan.log
+
+# Temporary file for scan results
+TEMP_FILE=/tmp/rkhunter-scan-temp.log
+
+# ----------------------------------------------------------------------------
+# System-wide rkhunter Configuration
+# ----------------------------------------------------------------------------
+#
+# This script also respects system-wide rkhunter settings in:
+# /etc/rkhunter.conf
+#
+# Recommended additions to /etc/rkhunter.conf:
+#
+# # Allow known hidden files
+# ALLOWHIDDENFILE=/etc/.resolv.conf.systemd-resolved.bak
+# ALLOWHIDDENFILE=/etc/.updated
+# ALLOWHIDDENFILE=/dev/.udev
+# ALLOWHIDDENFILE=/dev/.initramfs
+#
+# # Correct SSH protocol setting
+# ALLOW_SSH_PROT_V1=0
+#
+# # Update file properties database after changes
+# Run: sudo rkhunter --propupd
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Troubleshooting
+# ----------------------------------------------------------------------------
+#
+# If you receive false positive alerts:
+#
+# 1. Check the email alert for the specific warning
+# 2. Verify the file/setting is legitimate (not an actual threat)
+# 3. Add an IGNORE pattern above for that specific warning
+# 4. Test: sudo /opt/monitoring/scripts/rkhunter-scan.sh
+# 5. Check logs: sudo tail /opt/monitoring/logs/rkhunter-scan.log
+#
+# To temporarily switch to paranoid mode for debugging:
+# 1. Change MODE=paranoid
+# 2. Run script manually to see all warnings
+# 3. Identify patterns to ignore
+# 4. Add to IGNORE list above
+# 5. Switch back to MODE=strict
+#
+# Common issues:
+# - If receiving too many alerts: Add more IGNORE patterns
+# - If not receiving alerts: Check email configuration (Postfix)
+# - If uncertain about warning: Research online or switch to paranoid mode
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Updates and Maintenance
+# ----------------------------------------------------------------------------
+#
+# Keep rkhunter updated:
+#   sudo rkhunter --update
+#
+# Update file properties database after system updates:
+#   sudo rkhunter --propupd
+#
+# Run manual scan to test:
+#   sudo rkhunter --check --skip-keypress --report-warnings-only
+#
+# View recent scan results:
+#   sudo tail -100 /opt/monitoring/logs/rkhunter-scan.log
+#
+# ============================================================================
